@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Familial</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f5f4f0;--bg2:#ffffff;--bg3:#eeedea;
+  --text:#1a1a18;--text2:#6b6b66;--text3:#9a9a94;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+  --blue:#185FA5;--blue-lt:#E6F1FB;--blue-dk:#0C447C;
+  --green:#3B6D11;--green-lt:#EAF3DE;--green-dk:#27500A;
+  --red:#A32D2D;--red-lt:#FCEBEB;--red-dk:#791F1F;
+  --amber:#BA7517;--amber-lt:#FAEEDA;--amber-dk:#633806;
+  --teal:#0F6E56;--teal-lt:#E1F5EE;--teal-dk:#085041;
+  --purple:#533AB7;--purple-lt:#EEEDFE;--purple-dk:#3C3489;
+  --r:8px;--rl:12px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1a18;--bg2:#252522;--bg3:#2e2e2a;
+  --text:#f0efe8;--text2:#a8a8a0;--text3:#6b6b64;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --blue-lt:#042C53;--blue-dk:#B5D4F4;
+  --green-lt:#173404;--green-dk:#C0DD97;
+  --red-lt:#501313;--red-dk:#F7C1C1;
+  --amber-lt:#412402;--amber-dk:#FAC775;
+  --teal-lt:#04342C;--teal-dk:#9FE1CB;
+  --purple-lt:#26215C;--purple-dk:#CECBF6;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── AUTH SCREEN ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:2rem;width:100%;max-width:400px;}
+.auth-logo{width:48px;height:48px;background:var(--blue);border-radius:var(--rl);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:22px;margin:0 auto 1rem;}
+.auth-title{text-align:center;font-size:20px;font-weight:600;margin-bottom:4px;}
+.auth-sub{text-align:center;font-size:13px;color:var(--text2);margin-bottom:1.5rem;}
+.auth-err{background:var(--red-lt);color:var(--red-dk);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:1rem;display:none;}
+
+/* ── HEADER ── */
+.hdr{background:var(--bg2);border-bottom:0.5px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.hdr-logo{width:32px;height:32px;background:var(--blue);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;}
+.hdr h1{font-size:15px;font-weight:500;}
+.hdr-user{font-size:12px;color:var(--text2);margin-left:auto;}
+.hdr-sync{font-size:11px;color:var(--teal-dk);background:var(--teal-lt);padding:3px 8px;border-radius:99px;}
+.hdr-sync.syncing{color:var(--amber-dk);background:var(--amber-lt);}
+
+/* ── LAYOUT ── */
+.wrap{max-width:980px;margin:0 auto;padding:1.5rem;}
+.sbanner{background:var(--green-lt);color:var(--green-dk);padding:8px 14px;border-radius:var(--r);font-size:13px;margin-bottom:1rem;text-align:center;display:none;}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.5rem;}
+.met{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:14px 12px;position:relative;overflow:hidden;}
+.met::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--blue);opacity:.3;}
+.met.c-green::before{background:var(--green);opacity:.6;}
+.met.c-red::before{background:var(--red);opacity:.6;}
+.met.c-amber::before{background:var(--amber);opacity:.6;}
+.met.c-teal::before{background:var(--teal);opacity:.6;}
+.met.c-purple::before{background:var(--purple);opacity:.6;}
+.met-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+.met-val{font-size:18px;font-weight:600;line-height:1.1;}
+.met-val.green{color:var(--green);}
+.met-val.red{color:var(--red);}
+.met-val.amber{color:var(--amber);}
+.met-val.purple{color:var(--purple);}
+.met-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;margin-bottom:1.5rem;background:var(--bg3);border-radius:var(--rl);padding:4px;flex-wrap:wrap;}
+.tab{flex:1;min-width:70px;padding:8px 6px;border:none;border-radius:var(--r);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;}
+.tab.active{background:var(--bg2);color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.tab:hover:not(.active){color:var(--text);}
+.sec{display:none;}.sec.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
+.ct{font-size:14px;font-weight:500;}
+.csub{font-size:12px;color:var(--text2);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g2c{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:700px){.g2c,.g2,.g3{grid-template-columns:1fr;}}
+.dc{display:grid;grid-template-columns:1.2fr 1fr;gap:1rem;margin-bottom:1rem;}
+@media(max-width:700px){.dc{grid-template-columns:1fr;}}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.fr3{grid-template-columns:2fr 1fr 1fr;}
+.fr4{grid-template-columns:2fr 1fr 1fr 1fr;}
+@media(max-width:640px){.fr,.fr3,.fr4{grid-template-columns:1fr;}}
+.fc{display:flex;flex-direction:column;gap:4px;}
+.fc label{font-size:12px;color:var(--text2);}
+input,select{width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
+input:focus,select:focus{border-color:var(--blue);}
+input[readonly]{background:var(--bg3);color:var(--text2);cursor:default;}
+select option{background:var(--bg2);color:var(--text);}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 16px;border:0.5px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn:hover{background:var(--bg3);}
+.btn.pri{background:var(--blue);color:var(--blue-lt);border-color:var(--blue);}
+.btn.pri:hover{background:var(--blue-dk);}
+.btn.sm{padding:5px 10px;font-size:12px;}
+.btn.del{color:var(--red);border-color:transparent;background:transparent;}
+.btn.del:hover{background:var(--red-lt);}
+.btn.ok{color:var(--green);border-color:transparent;}
+.btn.ok:hover{background:var(--green-lt);}
+.btn.full{width:100%;margin-top:8px;}
+
+/* ── ITEMS ── */
+.ilist{display:flex;flex-direction:column;gap:6px;}
+.irow{display:flex;align-items:center;gap:8px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--r);font-size:13px;flex-wrap:wrap;}
+.irow.paid-row{border-color:var(--green);background:rgba(59,109,17,0.04);}
+.irow.overdue-row{border-color:var(--red);background:rgba(163,45,45,0.04);}
+.iname{flex:1;min-width:100px;font-weight:500;}
+.icat{font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 8px;border-radius:99px;white-space:nowrap;}
+.idate{font-size:12px;color:var(--text2);white-space:nowrap;}
+.iwho{font-size:11px;color:var(--text3);white-space:nowrap;}
+.iamt{font-weight:500;white-space:nowrap;}
+.iamt.dep{color:var(--red);}
+.iamt.rev{color:var(--green);}
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;white-space:nowrap;font-weight:500;}
+.badge.paid{background:var(--green-lt);color:var(--green-dk);}
+.badge.unpaid{background:var(--amber-lt);color:var(--amber-dk);}
+.badge.overdue{background:var(--red-lt);color:var(--red-dk);}
+.toggle-status{font-size:11px;padding:4px 10px;border-radius:99px;border:0.5px solid;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.toggle-status.to-paid{background:var(--green-lt);color:var(--green-dk);border-color:var(--green);}
+.toggle-status.to-paid:hover{background:var(--green);color:#fff;}
+.toggle-status.to-unpaid{background:var(--amber-lt);color:var(--amber-dk);border-color:var(--amber);}
+.toggle-status.to-unpaid:hover{background:var(--amber);color:#fff;}
+.fac-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+
+/* ── PROGRESS ── */
+.pb{background:var(--border);border-radius:99px;height:6px;margin:4px 0 10px;overflow:hidden;}
+.pb.thick{height:10px;margin:6px 0 4px;}
+.pf{height:100%;border-radius:99px;background:var(--blue);transition:width .4s;}
+.pf.green{background:var(--green);}
+.pf.amber{background:var(--amber);}
+.pf.red{background:var(--red);}
+.pf.purple{background:var(--purple);}
+.pf.teal{background:var(--teal);}
+
+/* ── MISC ── */
+.crow{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;}
+.clabel{flex:1;}
+.camt{min-width:80px;text-align:right;color:var(--text2);font-size:13px;}
+.cpct{min-width:36px;text-align:right;font-size:12px;color:var(--text2);}
+.scrd{background:var(--bg3);border-radius:var(--r);padding:1rem;}
+.scrd .sn{font-size:12px;color:var(--text2);margin-bottom:4px;}
+.scrd .sa{font-size:18px;font-weight:500;}
+.scrd .sp{font-size:11px;color:var(--text3);margin-top:2px;}
+.sep{border:none;border-top:0.5px solid var(--border);margin:1rem 0;}
+.sr{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:5px 0;}
+.sr.tot{font-weight:500;font-size:16px;padding-top:8px;}
+.empty{text-align:center;padding:2rem;color:var(--text2);font-size:13px;}
+.cwrap{position:relative;width:100%;height:200px;}
+.cwrap-sm{position:relative;width:100%;height:160px;}
+.info-box{background:var(--blue-lt);color:var(--blue-dk);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-top:10px;}
+.warn-box{background:var(--amber-lt);color:var(--amber-dk);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-top:10px;}
+.good-box{background:var(--green-lt);color:var(--green-dk);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-top:10px;}
+.slabel{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.child-card{background:var(--bg3);border-radius:var(--rl);padding:1.25rem;border:0.5px solid var(--border);}
+.child-name{font-size:15px;font-weight:600;margin-bottom:4px;}
+.child-total{font-size:22px;font-weight:700;color:var(--teal);margin-bottom:8px;}
+.dette-card{background:var(--bg2);border:0.5px solid var(--red);border-radius:var(--rl);padding:1rem;margin-bottom:8px;}
+.rev-type-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--teal-lt);color:var(--teal-dk);white-space:nowrap;}
+.loading{text-align:center;padding:3rem;color:var(--text2);font-size:14px;}
+</style>
+</head>
+<body>
+
+<!-- ══ ÉCRAN DE CONNEXION ══ -->
+<div id="auth-screen" class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">B</div>
+    <div class="auth-title">Budget Familial</div>
+    <div class="auth-sub">Connectez-vous pour accéder à votre budget</div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="fc" style="margin-bottom:10px;">
+      <label>Adresse courriel</label>
+      <input type="email" id="auth-email" placeholder="votre@email.com" onkeydown="if(event.key==='Enter')document.getElementById('auth-pwd').focus()">
+    </div>
+    <div class="fc" style="margin-bottom:16px;">
+      <label>Mot de passe</label>
+      <input type="password" id="auth-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn pri full" onclick="doLogin()">Se connecter</button>
+    <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text2);">
+      Pas encore de compte ? <a href="#" onclick="showRegister()" style="color:var(--blue);">Créer un compte</a>
+    </div>
+
+    <!-- Register form (hidden by default) -->
+    <div id="register-form" style="display:none;margin-top:16px;border-top:0.5px solid var(--border);padding-top:16px;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Créer un compte</div>
+      <div class="fc" style="margin-bottom:10px;">
+        <label>Votre prénom</label>
+        <input type="text" id="reg-name" placeholder="Prénom">
+      </div>
+      <div class="fc" style="margin-bottom:10px;">
+        <label>Adresse courriel</label>
+        <input type="email" id="reg-email" placeholder="votre@email.com">
+      </div>
+      <div class="fc" style="margin-bottom:12px;">
+        <label>Mot de passe (min. 6 caractères)</label>
+        <input type="password" id="reg-pwd" placeholder="••••••••">
+      </div>
+      <button class="btn pri full" onclick="doRegister()">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPLICATION PRINCIPALE ══ -->
+<div id="app-screen" style="display:none;">
+  <header class="hdr">
+    <div class="hdr-logo">B</div>
+    <h1>Budget Familial</h1>
+    <span class="hdr-sync" id="sync-status">✓ Synchronisé</span>
+    <span class="hdr-user" id="hdr-user"></span>
+    <button class="btn sm" onclick="doLogout()" style="margin-left:8px;">Déconnexion</button>
+  </header>
+
+  <div class="wrap">
+    <div class="sbanner" id="sb">✓ Sauvegardé</div>
+    <div class="metrics" id="metrics"></div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="sw('tableau-bord',this)">📊 Tableau</button>
+      <button class="tab" onclick="sw('revenus',this)">💰 Revenus</button>
+      <button class="tab" onclick="sw('depenses',this)">💸 Dépenses</button>
+      <button class="tab" onclick="sw('factures',this)">🧾 Factures</button>
+      <button class="tab" onclick="sw('dettes',this)">💳 Dettes</button>
+      <button class="tab" onclick="sw('epargne',this)">🏦 Épargne</button>
+      <button class="tab" onclick="sw('objectifs',this)">🎯 Objectifs</button>
+    </div>
+
+    <!-- ═══ TABLEAU DE BORD ═══ -->
+    <div class="sec active" id="tab-tableau-bord">
+      <div id="obj-banner"></div>
+      <div class="dc">
+        <div class="card"><div class="ch"><span class="ct">Dépenses par catégorie</span></div><div id="cats-list"></div></div>
+        <div class="card" style="display:flex;flex-direction:column;"><div class="ch"><span class="ct">Répartition</span></div><div class="cwrap"><canvas id="donutChart"></canvas></div></div>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">Revenus vs dépenses</span></div><div class="cwrap-sm"><canvas id="barChart"></canvas></div></div>
+      <div class="g2c" style="margin-bottom:1rem;">
+        <div class="card"><div class="ch"><span class="ct">Factures ce mois</span></div><div id="fac-gauge"></div><div class="cwrap-sm"><canvas id="facChart"></canvas></div></div>
+        <div class="card"><div class="ch"><span class="ct">Progression budget</span></div><div id="budget-gauge"></div></div>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">Dernières transactions</span></div><div id="recent" class="ilist"></div></div>
+      <div class="card"><div class="ch"><span class="ct">Factures à venir</span></div><div id="upcoming" class="ilist"></div></div>
+    </div>
+
+    <!-- ═══ REVENUS ═══ -->
+    <div class="sec" id="tab-revenus">
+      <div class="card">
+        <div class="ch"><span class="ct">💰 Salaires (aux 2 semaines)</span><span class="csub">Calcul : salaire × 2</span></div>
+        <div class="fr">
+          <div class="fc"><label>Votre prénom</label><input type="text" id="sn1" placeholder="Votre prénom" oninput="updateNames()"></div>
+          <div class="fc"><label>Prénom de votre mari</label><input type="text" id="sn2" placeholder="Son prénom" oninput="updateNames()"></div>
+        </div>
+        <div class="fr">
+          <div class="fc"><label id="lbl-s1">Votre salaire aux 2 semaines ($)</label><input type="number" id="s1bw" placeholder="Ex : 1400.00" min="0" step="50" oninput="updSal()"><span id="s1m-info" style="font-size:12px;color:var(--teal-dk);margin-top:4px;display:none;"></span></div>
+          <div class="fc"><label id="lbl-s2">Salaire mari aux 2 semaines ($)</label><input type="number" id="s2bw" placeholder="Ex : 1600.00" min="0" step="50" oninput="updSal()"><span id="s2m-info" style="font-size:12px;color:var(--teal-dk);margin-top:4px;display:none;"></span></div>
+        </div>
+        <div class="g2" id="sal-disp" style="margin-top:1rem;"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">➕ Autres revenus (par mois)</span></div>
+        <div class="fr fr4">
+          <div class="fc"><label>Description</label><input type="text" id="rev-desc" placeholder="Ex : Allocation familiale"></div>
+          <div class="fc"><label>Montant mensuel ($)</label><input type="number" id="rev-amt" placeholder="0.00" min="0" step="10"></div>
+          <div class="fc"><label>Type</label>
+            <select id="rev-type"><option>Allocation familiale</option><option>Pension alimentaire</option><option>Loyer reçu</option><option>Remboursement</option><option>Prime / Bonus</option><option>Revenu secondaire</option><option>Autre</option></select>
+          </div>
+          <div class="fc"><label>&nbsp;</label><button class="btn pri" onclick="addRev()">+ Ajouter</button></div>
+        </div>
+        <div id="rev-list" class="ilist" style="margin-top:10px;"></div>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">Résumé des revenus</span></div><div id="rev-summary"></div></div>
+    </div>
+
+    <!-- ═══ DÉPENSES ═══ -->
+    <div class="sec" id="tab-depenses">
+      <div class="card">
+        <div class="ch"><span class="ct">Ajouter une dépense</span></div>
+        <div class="fr fr3">
+          <div class="fc"><label>Description</label><input type="text" id="dep-desc" placeholder="Ex : Épicerie IGA"></div>
+          <div class="fc"><label>Montant ($)</label><input type="number" id="dep-amt" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="fc"><label>Date</label><input type="date" id="dep-date"></div>
+        </div>
+        <div class="fr">
+          <div class="fc"><label>Catégorie</label>
+            <select id="dep-cat"><option>Épicerie</option><option>Transport</option><option>Logement</option><option>Santé</option><option>Vêtements</option><option>Loisirs</option><option>Restaurant</option><option>Éducation</option><option>Enfants</option><option>Autre</option></select>
+          </div>
+          <div class="fc"><label>Payé par</label>
+            <select id="dep-who"><option id="om">Moi</option><option id="oh">Mon mari</option><option>Les deux</option></select>
+          </div>
+        </div>
+        <button class="btn pri" onclick="addDep()">+ Ajouter la dépense</button>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">🧮 Budget mensuel</span></div><div id="budget-calc"></div></div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Liste des dépenses</span>
+          <select id="dep-filter" onchange="renderDep()" style="width:auto;font-size:12px;"><option value="">Toutes</option><option>Épicerie</option><option>Transport</option><option>Logement</option><option>Santé</option><option>Vêtements</option><option>Loisirs</option><option>Restaurant</option><option>Éducation</option><option>Enfants</option><option>Autre</option></select>
+        </div>
+        <div id="dep-list" class="ilist"></div>
+      </div>
+    </div>
+
+    <!-- ═══ FACTURES ═══ -->
+    <div class="sec" id="tab-factures">
+      <div class="card">
+        <div class="ch"><span class="ct">Ajouter une facture</span></div>
+        <div class="fr fr3">
+          <div class="fc"><label>Fournisseur</label><input type="text" id="fac-desc" placeholder="Ex : Hydro-Québec"></div>
+          <div class="fc"><label>Montant ($)</label><input type="number" id="fac-amt" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="fc"><label>Date d'échéance</label><input type="date" id="fac-due"></div>
+        </div>
+        <div class="fr">
+          <div class="fc"><label>Catégorie</label>
+            <select id="fac-cat"><option>Électricité</option><option>Internet</option><option>Téléphone</option><option>Loyer / Hypothèque</option><option>Assurance</option><option>Eau</option><option>Chauffage</option><option>Carte de crédit</option><option>Autre</option></select>
+          </div>
+          <div class="fc"><label>Statut</label>
+            <select id="fac-status"><option value="unpaid">À payer</option><option value="paid">Payée</option></select>
+          </div>
+        </div>
+        <button class="btn pri" onclick="addFac()">+ Ajouter la facture</button>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Liste des factures</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn sm" id="ff-all" onclick="setFF('all',this)" style="font-weight:600;">Toutes</button>
+            <button class="btn sm" id="ff-unpaid" onclick="setFF('unpaid',this)">À payer</button>
+            <button class="btn sm" id="ff-paid" onclick="setFF('paid',this)">Payées</button>
+          </div>
+        </div>
+        <div id="fac-list" class="ilist"></div>
+      </div>
+    </div>
+
+    <!-- ═══ DETTES ═══ -->
+    <div class="sec" id="tab-dettes">
+      <div class="card">
+        <div class="ch"><span class="ct">💳 Ajouter une dette</span></div>
+        <div class="fr fr3">
+          <div class="fc"><label>Description</label><input type="text" id="det-desc" placeholder="Ex : Prêt auto, Carte Visa..."></div>
+          <div class="fc"><label>Montant total dû ($)</label><input type="number" id="det-total" placeholder="0.00" min="0" step="100" oninput="calcDette()"></div>
+          <div class="fc"><label>Montant déjà payé ($)</label><input type="number" id="det-paid" placeholder="0.00" min="0" step="100" oninput="calcDette()"></div>
+        </div>
+        <div class="fr">
+          <div class="fc"><label>Paiement mensuel ($)</label><input type="number" id="det-monthly" placeholder="Ex : 250.00" min="0" step="50"></div>
+          <div class="fc"><label>Type</label>
+            <select id="det-type"><option>Carte de crédit</option><option>Prêt auto</option><option>Prêt personnel</option><option>Hypothèque</option><option>Prêt étudiant</option><option>Dette médicale</option><option>Autre</option></select>
+          </div>
+        </div>
+        <div id="det-preview" style="margin-bottom:10px;"></div>
+        <button class="btn pri" onclick="addDette()">+ Ajouter la dette</button>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">Résumé des dettes</span></div><div id="det-summary"></div></div>
+      <div id="det-list"></div>
+    </div>
+
+    <!-- ═══ ÉPARGNE ═══ -->
+    <div class="sec" id="tab-epargne">
+      <div class="card">
+        <div class="ch"><span class="ct">🏦 Ajouter à l'épargne famille</span></div>
+        <div class="fr fr4">
+          <div class="fc"><label>Description</label><input type="text" id="ep-desc" placeholder="Ex : Fonds d'urgence..."></div>
+          <div class="fc"><label>Montant ($)</label><input type="number" id="ep-amt" placeholder="0.00" min="0" step="10"></div>
+          <div class="fc"><label>Type</label>
+            <select id="ep-type"><option>Fonds d'urgence</option><option>Vacances</option><option>Achat maison</option><option>Retraite</option><option>REER</option><option>CELI</option><option>Projet</option><option>Autre</option></select>
+          </div>
+          <div class="fc"><label>Date</label><input type="date" id="ep-date"></div>
+        </div>
+        <button class="btn pri" onclick="addEpFamille()">+ Ajouter</button>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">💰 Total épargne famille</span></div><div id="ep-famille-summary"></div><div id="ep-famille-list" class="ilist" style="margin-top:10px;"></div></div>
+      <div class="card">
+        <div class="ch"><span class="ct">👶 Épargne enfants</span></div>
+        <div class="fr fr3">
+          <div class="fc"><label>Enfant</label>
+            <select id="ep-enfant"><option value="Aylan">Aylan</option><option value="Eniole">Eniole</option><option value="Arris">Arris</option></select>
+          </div>
+          <div class="fc"><label>Montant ($)</label><input type="number" id="ep-enfant-amt" placeholder="0.00" min="0" step="10"></div>
+          <div class="fc"><label>Description</label><input type="text" id="ep-enfant-desc" placeholder="Ex : REEE..."></div>
+        </div>
+        <div class="fr">
+          <div class="fc"><label>Type</label>
+            <select id="ep-enfant-type"><option>REEE</option><option>Études</option><option>Activités</option><option>Futur</option><option>Autre</option></select>
+          </div>
+          <div class="fc"><label>Date</label><input type="date" id="ep-enfant-date"></div>
+        </div>
+        <button class="btn pri" onclick="addEpEnfant()">+ Ajouter pour l'enfant</button>
+      </div>
+      <div class="g3" id="ep-enfants-cards" style="margin-bottom:1rem;"></div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Historique épargne enfants</span>
+          <select id="ep-enfant-filter" onchange="renderEpargne()" style="width:auto;font-size:12px;"><option value="">Tous</option><option value="Aylan">Aylan</option><option value="Eniole">Eniole</option><option value="Arris">Arris</option></select>
+        </div>
+        <div id="ep-enfants-list" class="ilist"></div>
+      </div>
+    </div>
+
+    <!-- ═══ OBJECTIFS ═══ -->
+    <div class="sec" id="tab-objectifs">
+      <div class="card">
+        <div class="ch"><span class="ct">🎯 Objectif d'épargne mensuel</span></div>
+        <div class="fr">
+          <div class="fc"><label>Montant à épargner ($)</label><input type="number" id="oe" placeholder="Ex : 500" min="0" step="50" oninput="saveObj()"></div>
+          <div class="fc"><label>Nom de l'objectif</label><input type="text" id="on" placeholder="Ex : Vacances..." oninput="saveObj()"></div>
+        </div>
+        <div id="oe-res"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">📅 Budget total ce mois</span></div>
+        <div class="fr">
+          <div class="fc"><label>Budget maximum ($)</label><input type="number" id="obt" placeholder="Ex : 2800" min="0" step="100" oninput="saveObj()"></div>
+          <div class="fc"><label>Dépenses réelles (auto)</label><input type="number" id="odr" readonly></div>
+        </div>
+        <div id="obt-res"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">📊 Budget par catégorie</span></div>
+        <div id="obj-cats"></div>
+        <button class="btn pri" onclick="saveObj()" style="margin-top:1rem;">💾 Sauvegarder</button>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Données</span></div>
+        <button class="btn" onclick="exportCSV()">⬇ Exporter CSV</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script>
+/* ══ FIREBASE CONFIG ══ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCpi6-2QlO4R6KeVoNho6qWs-y1E8Czfbk",
+  authDomain: "budget-familial-12838.firebaseapp.com",
+  projectId: "budget-familial-12838",
+  storageBucket: "budget-familial-12838.firebasestorage.app",
+  messagingSenderId: "568506057513",
+  appId: "1:568506057513:web:0047329f196166612d6d38"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ══ STATE ══ */
+let currentUser = null;
+let D=[],F=[],REV=[],DET=[],EP_FAM=[],EP_ENF=[];
+let S={name1:'',name2:'',s1bw:0,s2bw:0};
+let O={e:0,n:'',bt:0,cats:{}};
+let nid=1,curFacFilter='all';
+let chDonut=null,chBar=null,chFac=null;
+let unsubscribes=[];
+
+const CATS=['Épicerie','Transport','Logement','Santé','Vêtements','Loisirs','Restaurant','Éducation','Enfants','Autre'];
+const COLORS=['#185FA5','#3B6D11','#993556','#BA7517','#0F6E56','#533AB7','#D85A30','#888780','#A32D2D','#0F6E56'];
+const ENFANTS=['Aylan','Eniole','Arris'];
+const ENFANT_COLORS=['#185FA5','#3B6D11','#993556'];
+
+/* ══ UTILS ══ */
+const td=()=>new Date().toISOString().split('T')[0];
+const fmt=n=>'$'+parseFloat(n||0).toLocaleString('fr-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const bwToM=bw=>Math.round(bw*2*100)/100;
+const totalDep=()=>D.reduce((s,d)=>s+d.amount,0);
+const totalFacUp=()=>F.filter(f=>f.status!=='paid').reduce((s,f)=>s+f.amount,0);
+const totalSalaires=()=>bwToM(S.s1bw)+bwToM(S.s2bw);
+const totalAutresRev=()=>REV.reduce((s,r)=>s+r.amount,0);
+const rev=()=>totalSalaires()+totalAutresRev();
+const solde=()=>rev()-totalDep()-totalFacUp();
+const totalDettes=()=>DET.reduce((s,d)=>s+(d.total-d.paid),0);
+const totalEpFam=()=>EP_FAM.reduce((s,e)=>s+e.amount,0);
+const totalEpEnf=name=>EP_ENF.filter(e=>e.enfant===name).reduce((s,e)=>s+e.amount,0);
+
+function setSyncStatus(status){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  if(status==='saving'){el.textContent='⏳ Sauvegarde...';el.className='hdr-sync syncing';}
+  else if(status==='saved'){el.textContent='✓ Synchronisé';el.className='hdr-sync';}
+  else if(status==='error'){el.textContent='⚠ Erreur sync';el.className='hdr-sync syncing';}
+}
+
+/* ══ FIREBASE AUTH ══ */
+function showRegister(){document.getElementById('register-form').style.display='block';}
+
+function doLogin(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pwd=document.getElementById('auth-pwd').value;
+  const err=document.getElementById('auth-err');
+  err.style.display='none';
+  if(!email||!pwd){err.textContent='Veuillez remplir tous les champs.';err.style.display='block';return;}
+  auth.signInWithEmailAndPassword(email,pwd)
+    .catch(e=>{
+      err.textContent=e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'Email ou mot de passe incorrect.':'Erreur de connexion. Vérifiez votre email.';
+      err.style.display='block';
+    });
+}
+
+function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pwd=document.getElementById('reg-pwd').value;
+  const err=document.getElementById('auth-err');
+  err.style.display='none';
+  if(!name||!email||!pwd){err.textContent='Veuillez remplir tous les champs.';err.style.display='block';return;}
+  auth.createUserWithEmailAndPassword(email,pwd)
+    .then(cred=>db.collection('users').doc(cred.user.uid).set({email,nom:name,role:'member'}))
+    .catch(e=>{err.textContent=e.code==='auth/email-already-in-use'?'Cet email est déjà utilisé.':'Erreur : '+e.message;err.style.display='block';});
+}
+
+function doLogout(){
+  unsubscribes.forEach(u=>u());unsubscribes=[];
+  auth.signOut();
+}
+
+/* ══ AUTH STATE OBSERVER ══ */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('auth-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    document.getElementById('hdr-user').textContent=user.email;
+    initFirestoreListeners();
+  } else {
+    currentUser=null;
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app-screen').style.display='none';
+    D=[];F=[];REV=[];DET=[];EP_FAM=[];EP_ENF=[];
+    S={name1:'',name2:'',s1bw:0,s2bw:0};O={e:0,n:'',bt:0,cats:{}};
+  }
+});
+
+/* ══ FIRESTORE LISTENERS (temps réel) ══ */
+function initFirestoreListeners(){
+  const uid=currentUser.uid;
+  const base=db.collection('budgets').doc(uid);
+
+  // Écoute en temps réel de toutes les collections
+  const collections={depenses:D,factures:F,revenus:REV,dettes:DET,epargne_famille:EP_FAM,epargne_enfants:EP_ENF};
+
+  Object.entries(collections).forEach(([col,arr])=>{
+    const unsub=base.collection(col).onSnapshot(snap=>{
+      arr.length=0;
+      snap.forEach(doc=>arr.push({...doc.data(),_id:doc.id}));
+      renderAll();
+    },err=>console.log('Listener error',col,err));
+    unsubscribes.push(unsub);
+  });
+
+  // Settings et objectifs
+  const unsubSettings=base.onSnapshot(snap=>{
+    if(snap.exists){
+      const data=snap.data();
+      if(data.settings){S={...S,...data.settings};restoreFormValues();}
+      if(data.objectifs){O={...O,...data.objectifs};renderObjInputs();}
+    }
+  });
+  unsubscribes.push(unsubSettings);
+}
+
+function getBase(){return db.collection('budgets').doc(currentUser.uid);}
+
+/* ══ FIREBASE SAVE FUNCTIONS ══ */
+async function fbAdd(col,data){
+  setSyncStatus('saving');
+  try{
+    const ref=await getBase().collection(col).add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    setSyncStatus('saved');return ref.id;
+  }catch(e){setSyncStatus('error');console.error(e);}
+}
+async function fbUpdate(col,docId,data){
+  setSyncStatus('saving');
+  try{await getBase().collection(col).doc(docId).update(data);setSyncStatus('saved');}
+  catch(e){setSyncStatus('error');console.error(e);}
+}
+async function fbDelete(col,docId){
+  setSyncStatus('saving');
+  try{await getBase().collection(col).doc(docId).delete();setSyncStatus('saved');}
+  catch(e){setSyncStatus('error');console.error(e);}
+}
+async function fbSaveSettings(){
+  setSyncStatus('saving');
+  try{await getBase().set({settings:S,objectifs:O},{merge:true});setSyncStatus('saved');}
+  catch(e){setSyncStatus('error');console.error(e);}
+}
+
+/* ══ TABS ══ */
+function sw(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');el.classList.add('active');
+  if(id==='tableau-bord')renderDash();
+  if(id==='objectifs')renderObj();
+  if(id==='depenses')renderBudgetCalc();
+  if(id==='epargne')renderEpargne();
+  if(id==='dettes')renderDettes();
+  if(id==='revenus')renderRevSummary();
+}
+
+/* ══ METRICS ══ */
+function renderMetrics(){
+  const td2=totalDep(),tfu=totalFacUp(),rv=rev(),sl=solde(),tdet=totalDettes();
+  const tep=totalEpFam()+ENFANTS.reduce((s,n)=>s+totalEpEnf(n),0);
+  const bt=O.bt||0;const pbt=bt>0?Math.round(td2/bt*100):null;
+  document.getElementById('metrics').innerHTML=`
+    <div class="met c-green"><div class="met-label">Revenus</div><div class="met-val green">${fmt(rv)}</div><div class="met-sub">/mois</div></div>
+    <div class="met c-red"><div class="met-label">Dépenses</div><div class="met-val red">${fmt(td2)}</div><div class="met-sub">${pbt!==null?pbt+'% budget':''}</div></div>
+    <div class="met c-amber"><div class="met-label">Factures</div><div class="met-val amber">${fmt(tfu)}</div><div class="met-sub">${F.filter(f=>f.status!=='paid').length} à payer</div></div>
+    <div class="met c-teal"><div class="met-label">Solde</div><div class="met-val ${sl>=0?'green':'red'}">${fmt(sl)}</div><div class="met-sub">disponible</div></div>
+    <div class="met c-red"><div class="met-label">Dettes</div><div class="met-val red">${fmt(tdet)}</div><div class="met-sub">${DET.length} dette(s)</div></div>
+    <div class="met c-purple"><div class="met-label">Épargne</div><div class="met-val purple">${fmt(tep)}</div><div class="met-sub">famille + enfants</div></div>
+  `;
+}
+
+/* ══ DASHBOARD ══ */
+function renderDash(){
+  const cats={};D.forEach(d=>{cats[d.cat]=(cats[d.cat]||0)+d.amount;});
+  const tot=totalDep();const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('cats-list').innerHTML=sorted.length?sorted.map(([c,a],i)=>{
+    const p=tot>0?Math.round(a/tot*100):0;const ob=O.cats[c]||0;const over=ob>0&&a>ob;
+    return`<div class="crow"><span style="width:10px;height:10px;border-radius:2px;background:${COLORS[i%10]};flex-shrink:0;"></span><span class="clabel">${c}${over?' <span style="font-size:10px;color:var(--red);">⚠</span>':''}</span><div style="flex:2;"><div class="pb"><div class="pf" style="width:${p}%;background:${COLORS[i%10]};"></div></div></div><span class="camt">${fmt(a)}</span><span class="cpct">${p}%</span></div>`;
+  }).join(''):'<div class="empty">Aucune dépense</div>';
+
+  if(chDonut){chDonut.destroy();chDonut=null;}
+  if(sorted.length){chDonut=new Chart(document.getElementById('donutChart').getContext('2d'),{type:'doughnut',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:COLORS.slice(0,sorted.length),borderWidth:2,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmt(ctx.raw)}}}}});}
+
+  const rv=rev(),td2=totalDep(),tfu=totalFacUp();
+  if(chBar){chBar.destroy();chBar=null;}
+  chBar=new Chart(document.getElementById('barChart').getContext('2d'),{type:'bar',data:{labels:['Revenus','Dépenses','Factures','Solde'],datasets:[{data:[rv,td2,tfu,Math.max(0,rv-td2-tfu)],backgroundColor:['#3B6D11','#A32D2D','#BA7517','#185FA5'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},scales:{x:{grid:{display:false},ticks:{color:'#6b6b66',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#6b6b66',font:{size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
+
+  const fP=F.filter(f=>f.status==='paid').reduce((s,f)=>s+f.amount,0);
+  const fU=F.filter(f=>f.status!=='paid').reduce((s,f)=>s+f.amount,0);
+  document.getElementById('fac-gauge').innerHTML=`<div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px;"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#3B6D11;margin-right:4px;"></span>Payées : <strong>${fmt(fP)}</strong></span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#BA7517;margin-right:4px;"></span>À payer : <strong>${fmt(fU)}</strong></span></div>`;
+  if(chFac){chFac.destroy();chFac=null;}
+  if(fP+fU>0){chFac=new Chart(document.getElementById('facChart').getContext('2d'),{type:'doughnut',data:{labels:['Payées','À payer'],datasets:[{data:[fP,fU],backgroundColor:['#3B6D11','#BA7517'],borderWidth:2,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmt(ctx.raw)}}}}});}
+
+  const bt=O.bt||0,dep=totalDep(),pBt=bt>0?Math.min(100,Math.round(dep/bt*100)):0;
+  const fc=pBt>=100?'red':pBt>=80?'amber':'green';
+  document.getElementById('budget-gauge').innerHTML=bt>0?`<div style="font-size:13px;color:var(--text2);margin-bottom:4px;">Budget : <strong style="color:var(--text);">${fmt(bt)}</strong></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Utilisé : <strong>${fmt(dep)}</strong></span><span style="font-weight:600;color:${pBt>=100?'var(--red)':pBt>=80?'var(--amber)':'var(--green)'};">${pBt}%</span></div><div class="pb thick"><div class="pf ${fc}" style="width:${pBt}%"></div></div>${bt-dep>=0?`<div style="font-size:13px;margin-top:8px;color:var(--green-dk);">Reste : <strong>${fmt(bt-dep)}</strong></div>`:`<div style="font-size:13px;margin-top:8px;color:var(--red);">Dépassé : <strong>${fmt(Math.abs(bt-dep))}</strong></div>`}`:'<div style="font-size:13px;color:var(--text2);">Définissez un budget dans Objectifs.</div>';
+
+  const rec=[...D].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,5);
+  document.getElementById('recent').innerHTML=rec.length?rec.map(d=>`<div class="irow"><span class="iname">${d.desc}</span><span class="icat">${d.cat}</span><span class="idate">${d.date||''}</span><span class="iwho">${d.who}</span><span class="iamt dep">-${fmt(d.amount)}</span></div>`).join(''):'<div class="empty">Aucune transaction</div>';
+
+  const tod2=td();const up=F.filter(f=>f.status!=='paid').sort((a,b)=>(a.due||'').localeCompare(b.due||'')).slice(0,5);
+  document.getElementById('upcoming').innerHTML=up.length?up.map(f=>`<div class="irow ${f.due<tod2?'overdue-row':''}"><span class="iname">${f.desc}</span><span class="icat">${f.cat}</span><span class="idate">Éch. ${f.due||''}</span><span class="badge ${f.due<tod2?'overdue':'unpaid'}">${f.due<tod2?'En retard':'À payer'}</span><span class="iamt dep">${fmt(f.amount)}</span></div>`).join(''):'<div class="empty">Aucune facture en attente ✓</div>';
+
+  const sl=solde();let bh='';
+  if(O.e>0&&rev()>0){if(sl>=O.e)bh=`<div class="good-box" style="margin-bottom:1rem;">✅ Objectif <strong>${O.n||'épargne'}</strong> atteint ! Solde : <strong>${fmt(sl)}</strong></div>`;else bh=`<div class="warn-box" style="margin-bottom:1rem;">⚠️ Objectif <strong>${O.n||'épargne'}</strong> : manque <strong>${fmt(O.e-sl)}</strong>.</div>`;}
+  document.getElementById('obj-banner').innerHTML=bh;
+}
+
+/* ══ REVENUS ══ */
+function updateNames(){
+  S.name1=document.getElementById('sn1').value;
+  S.name2=document.getElementById('sn2').value;
+  const n1=S.name1||'Vous',n2=S.name2||'Mari';
+  document.getElementById('lbl-s1').textContent=n1+' — salaire aux 2 semaines ($)';
+  document.getElementById('lbl-s2').textContent=n2+' — salaire aux 2 semaines ($)';
+  document.getElementById('om').textContent=n1;
+  document.getElementById('oh').textContent=n2;
+  updSal();
+}
+function updSal(){
+  S.s1bw=parseFloat(document.getElementById('s1bw').value)||0;
+  S.s2bw=parseFloat(document.getElementById('s2bw').value)||0;
+  const m1=bwToM(S.s1bw),m2=bwToM(S.s2bw);
+  const i1=document.getElementById('s1m-info'),i2=document.getElementById('s2m-info');
+  if(S.s1bw>0){i1.style.display='block';i1.textContent=`→ ${fmt(S.s1bw)} × 2 = ${fmt(m1)}/mois`;}else i1.style.display='none';
+  if(S.s2bw>0){i2.style.display='block';i2.textContent=`→ ${fmt(S.s2bw)} × 2 = ${fmt(m2)}/mois`;}else i2.style.display='none';
+  const n1=S.name1||'Vous',n2=S.name2||'Mari';
+  const tot=totalSalaires();const p1=tot>0?Math.round(m1/tot*100):50,p2=100-p1;
+  document.getElementById('sal-disp').innerHTML=`
+    <div class="scrd"><div class="sn">${n1}</div><div class="sa">${fmt(m1)}<span style="font-size:11px;color:var(--text2);font-weight:400;"> /mois</span></div><div class="sp">${S.s1bw>0?fmt(S.s1bw)+' × 2':''}</div><div class="pb" style="margin-top:8px;"><div class="pf" style="width:${p1}%"></div></div><div style="font-size:11px;color:var(--text2);">${p1}% des salaires</div></div>
+    <div class="scrd"><div class="sn">${n2}</div><div class="sa">${fmt(m2)}<span style="font-size:11px;color:var(--text2);font-weight:400;"> /mois</span></div><div class="sp">${S.s2bw>0?fmt(S.s2bw)+' × 2':''}</div><div class="pb" style="margin-top:8px;"><div class="pf green" style="width:${p2}%"></div></div><div style="font-size:11px;color:var(--text2);">${p2}% des salaires</div></div>
+  `;
+  fbSaveSettings();renderRevSummary();renderMetrics();
+}
+async function addRev(){
+  const desc=document.getElementById('rev-desc').value.trim();
+  const amount=parseFloat(document.getElementById('rev-amt').value);
+  const type=document.getElementById('rev-type').value;
+  if(!desc||isNaN(amount)||amount<=0){alert('Remplissez la description et le montant.');return;}
+  await fbAdd('revenus',{desc,amount,type});
+  document.getElementById('rev-desc').value='';document.getElementById('rev-amt').value='';
+}
+function renderRevList(){
+  document.getElementById('rev-list').innerHTML=REV.length
+    ?REV.map(r=>`<div class="irow"><span class="iname">${r.desc}</span><span class="rev-type-badge">${r.type}</span><span style="font-size:12px;color:var(--text2);">mensuel</span><span class="iamt rev">+${fmt(r.amount)}</span><button class="btn sm del" onclick="delRev('${r._id}')">🗑</button></div>`).join('')
+    :'<div class="empty">Aucun autre revenu</div>';
+}
+async function delRev(id){if(!confirm('Supprimer ?'))return;await fbDelete('revenus',id);}
+function renderRevSummary(){
+  const sal=totalSalaires(),autres=totalAutresRev(),tot=rev(),sl=solde(),td2=totalDep(),tfu=totalFacUp();
+  const te=tot>0?Math.max(0,Math.round(sl/tot*100)):0;
+  document.getElementById('rev-summary').innerHTML=`
+    <div class="sr"><span>Salaires (× 2)</span><span style="color:var(--green);font-weight:500;">${fmt(sal)}</span></div>
+    <div class="sr"><span>Autres revenus</span><span style="color:var(--teal);font-weight:500;">+ ${fmt(autres)}</span></div>
+    <hr class="sep">
+    <div class="sr tot"><span>Total revenus mensuels</span><span style="color:var(--green);">${fmt(tot)}</span></div>
+    <div class="sr"><span>- Dépenses</span><span style="color:var(--red);">- ${fmt(td2)}</span></div>
+    <div class="sr"><span>- Factures à payer</span><span style="color:var(--red);">- ${fmt(tfu)}</span></div>
+    <hr class="sep">
+    <div class="sr tot"><span>Solde disponible</span><span style="color:${sl>=0?'var(--green)':'var(--red)'};">${fmt(sl)}</span></div>
+    <div style="margin-top:10px;"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Capacité d'épargne : ${te}%</div><div class="pb"><div class="pf green" style="width:${te}%"></div></div></div>
+  `;
+}
+
+/* ══ DÉPENSES ══ */
+function renderDep(){
+  const fil=document.getElementById('dep-filter').value;
+  const list=fil?D.filter(d=>d.cat===fil):D;
+  const sorted=[...list].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('dep-list').innerHTML=sorted.length?sorted.map(d=>`<div class="irow"><span class="iname">${d.desc}</span><span class="icat">${d.cat}</span><span class="idate">${d.date||''}</span><span class="iwho">${d.who}</span><span class="iamt dep">-${fmt(d.amount)}</span><button class="btn sm del" onclick="delDep('${d._id}')">🗑</button></div>`).join(''):'<div class="empty">Aucune dépense</div>';
+  renderMetrics();renderBudgetCalc();
+}
+async function addDep(){
+  const desc=document.getElementById('dep-desc').value.trim();
+  const amount=parseFloat(document.getElementById('dep-amt').value);
+  const date=document.getElementById('dep-date').value||td();
+  const cat=document.getElementById('dep-cat').value;
+  const who=document.getElementById('dep-who').value;
+  if(!desc||isNaN(amount)||amount<=0){alert('Remplissez la description et le montant.');return;}
+  await fbAdd('depenses',{desc,amount,date,cat,who});
+  document.getElementById('dep-desc').value='';document.getElementById('dep-amt').value='';
+}
+async function delDep(id){if(!confirm('Supprimer ?'))return;await fbDelete('depenses',id);}
+
+function renderBudgetCalc(){
+  const dep=totalDep(),bt=O.bt||0,pct=bt>0?Math.min(100,Math.round(dep/bt*100)):0;
+  const fc=pct>=100?'red':pct>=80?'amber':'green';
+  let h=`<div class="fr"><div class="fc"><label>Budget maximum ce mois ($)</label><input type="number" id="cb" placeholder="Ex : 2 800" min="0" step="100" value="${bt||''}" oninput="updCalc(this.value)"></div><div class="fc"><label>Dépenses réelles</label><input type="number" value="${dep.toFixed(2)}" readonly></div></div>`;
+  if(bt>0){const rest=bt-dep;h+=`<div style="margin:10px 0 4px;display:flex;justify-content:space-between;font-size:13px;"><span>Utilisé : <strong>${fmt(dep)}</strong> / ${fmt(bt)}</span><span style="font-weight:600;color:${pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)'};">${pct}%</span></div><div class="pb thick"><div class="pf ${fc}" style="width:${pct}%"></div></div>`;h+=rest>=0?`<div class="good-box">Budget restant : <strong>${fmt(rest)}</strong></div>`:`<div class="warn-box">⚠️ Dépassé de <strong>${fmt(Math.abs(rest))}</strong>.</div>`;}
+  const ctots={};D.forEach(d=>{ctots[d.cat]=(ctots[d.cat]||0)+d.amount;});
+  h+='<hr style="border:none;border-top:0.5px solid var(--border);margin:1rem 0;"><div class="slabel">Détail par catégorie</div>';
+  const cl=Object.entries(ctots).sort((a,b)=>b[1]-a[1]);
+  cl.forEach(([c,a])=>{const bc=O.cats[c]||0,p=bc>0?Math.min(100,Math.round(a/bc*100)):0;const f2=p>=100?'red':p>=80?'amber':'green';h+=`<div style="margin-bottom:10px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--r);"><div style="display:flex;justify-content:space-between;align-items:center;${bc>0?'margin-bottom:6px;':''}"><span style="font-weight:500;font-size:13px;">${c}</span><span style="color:var(--red);font-weight:500;">-${fmt(a)}</span></div>${bc>0?`<div style="font-size:11px;color:var(--text2);margin-bottom:4px;">Budget : ${fmt(bc)} — ${p}%${p>=100?' ⚠️':''}</div><div class="pb" style="margin:0;"><div class="pf ${f2}" style="width:${p}%"></div></div>`:''}</div>`;});
+  if(!cl.length)h+='<div class="empty">Aucune dépense</div>';
+  document.getElementById('budget-calc').innerHTML=h;
+}
+function updCalc(v){O.bt=parseFloat(v)||0;const e=document.getElementById('obt');if(e)e.value=v;fbSaveSettings();renderBudgetCalc();renderMetrics();}
+
+/* ══ FACTURES ══ */
+function setFF(f,el){curFacFilter=f;document.querySelectorAll('#ff-all,#ff-unpaid,#ff-paid').forEach(b=>b.style.fontWeight='400');el.style.fontWeight='600';renderFac();}
+function renderFac(){
+  const tod2=td();
+  let list=curFacFilter==='paid'?F.filter(f=>f.status==='paid'):curFacFilter==='unpaid'?F.filter(f=>f.status!=='paid'):F;
+  list=[...list].sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  document.getElementById('fac-list').innerHTML=list.length?list.map(f=>{
+    const over=f.status!=='paid'&&f.due<tod2;
+    const badge=f.status==='paid'?'<span class="badge paid">✓ Payée</span>':over?'<span class="badge overdue">En retard</span>':'<span class="badge unpaid">À payer</span>';
+    const tog=f.status==='paid'?`<button class="toggle-status to-unpaid" onclick="toggleFac('${f._id}','unpaid')">↩ Impayée</button>`:`<button class="toggle-status to-paid" onclick="toggleFac('${f._id}','paid')">✓ Payée</button>`;
+    return`<div class="irow ${f.status==='paid'?'paid-row':over?'overdue-row':''}"><span class="iname">${f.desc}</span><span class="icat">${f.cat}</span><span class="idate">Éch. ${f.due||''}</span>${badge}<span class="iamt dep">${fmt(f.amount)}</span><div class="fac-actions">${tog}<button class="btn sm del" onclick="delFac('${f._id}')">🗑</button></div></div>`;
+  }).join(''):'<div class="empty">Aucune facture</div>';
+  renderMetrics();
+}
+async function toggleFac(id,newStatus){await fbUpdate('factures',id,{status:newStatus});}
+async function addFac(){
+  const desc=document.getElementById('fac-desc').value.trim();
+  const amount=parseFloat(document.getElementById('fac-amt').value);
+  const due=document.getElementById('fac-due').value||td();
+  const cat=document.getElementById('fac-cat').value;
+  const status=document.getElementById('fac-status').value;
+  if(!desc||isNaN(amount)||amount<=0){alert('Remplissez le fournisseur et le montant.');return;}
+  await fbAdd('factures',{desc,amount,due,cat,status});
+  document.getElementById('fac-desc').value='';document.getElementById('fac-amt').value='';
+}
+async function delFac(id){if(!confirm('Supprimer ?'))return;await fbDelete('factures',id);}
+
+/* ══ DETTES ══ */
+function calcDette(){
+  const total=parseFloat(document.getElementById('det-total').value)||0;
+  const paid=parseFloat(document.getElementById('det-paid').value)||0;
+  const reste=total-paid;const pct=total>0?Math.min(100,Math.round(paid/total*100)):0;
+  const fc=pct>=75?'green':pct>=40?'amber':'red';
+  document.getElementById('det-preview').innerHTML=total>0?`<div style="padding:10px;background:var(--bg3);border-radius:var(--r);font-size:13px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Reste : <strong style="color:var(--red);">${fmt(reste)}</strong></span><span>${pct}% remboursé</span></div><div class="pb"><div class="pf ${fc}" style="width:${pct}%"></div></div></div>`:'';
+}
+async function addDette(){
+  const desc=document.getElementById('det-desc').value.trim();
+  const total=parseFloat(document.getElementById('det-total').value);
+  const paid=parseFloat(document.getElementById('det-paid').value)||0;
+  const monthly=parseFloat(document.getElementById('det-monthly').value)||0;
+  const type=document.getElementById('det-type').value;
+  if(!desc||isNaN(total)||total<=0){alert('Remplissez la description et le montant total.');return;}
+  await fbAdd('dettes',{desc,total,paid,monthly,type});
+  document.getElementById('det-desc').value='';document.getElementById('det-total').value='';
+  document.getElementById('det-paid').value='';document.getElementById('det-monthly').value='';
+  document.getElementById('det-preview').innerHTML='';
+}
+function renderDettes(){
+  const totalDet=DET.reduce((s,d)=>s+(d.total-d.paid),0);
+  const totalMens=DET.reduce((s,d)=>s+d.monthly,0);
+  document.getElementById('det-summary').innerHTML=DET.length?`<div class="sr"><span>Total restant</span><span style="color:var(--red);font-weight:600;">${fmt(totalDet)}</span></div><div class="sr"><span>Paiements mensuels</span><span style="color:var(--amber);font-weight:500;">${fmt(totalMens)}/mois</span></div>`:'<div class="empty">Aucune dette ✓</div>';
+  document.getElementById('det-list').innerHTML=DET.length?DET.map(d=>{
+    const reste=d.total-d.paid;const pct=d.total>0?Math.min(100,Math.round(d.paid/d.total*100)):0;
+    const fc=pct>=75?'green':pct>=40?'amber':'red';
+    return`<div class="dette-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div><span style="font-weight:500;font-size:14px;">${d.desc}</span> <span class="icat">${d.type}</span></div><button class="btn sm del" onclick="delDette('${d._id}')">🗑</button></div><div style="display:flex;gap:16px;font-size:13px;margin-bottom:8px;flex-wrap:wrap;"><span>Total : <strong>${fmt(d.total)}</strong></span><span>Payé : <strong style="color:var(--green);">${fmt(d.paid)}</strong></span><span>Reste : <strong style="color:var(--red);">${fmt(reste)}</strong></span>${d.monthly>0?`<span>Mensuel : <strong style="color:var(--amber);">${fmt(d.monthly)}/mois</strong></span>`:''}</div><div class="pb thick" style="margin:0;"><div class="pf ${fc}" style="width:${pct}%"></div></div><div style="font-size:12px;color:var(--text2);margin-top:4px;">${pct}% remboursé${d.monthly>0&&reste>0?` — ~${Math.ceil(reste/d.monthly)} mois restants`:''}</div><div style="margin-top:10px;display:flex;gap:8px;"><input type="number" placeholder="Ajouter un paiement $" style="flex:1;font-size:12px;padding:5px 8px;" id="pay-${d._id}" min="0" step="10"><button class="btn sm ok" onclick="payDette('${d._id}',${d.paid},${d.total})">+ Paiement</button></div></div>`;
+  }).join(''):'';
+}
+async function payDette(id,currentPaid,total){
+  const v=parseFloat(document.getElementById('pay-'+id).value)||0;
+  if(v<=0){alert('Entrez un montant.');return;}
+  const newPaid=Math.min(total,currentPaid+v);
+  await fbUpdate('dettes',id,{paid:newPaid});
+}
+async function delDette(id){if(!confirm('Supprimer ?'))return;await fbDelete('dettes',id);}
+
+/* ══ ÉPARGNE ══ */
+async function addEpFamille(){
+  const desc=document.getElementById('ep-desc').value.trim();
+  const amount=parseFloat(document.getElementById('ep-amt').value);
+  const type=document.getElementById('ep-type').value;
+  const date=document.getElementById('ep-date').value||td();
+  if(!desc||isNaN(amount)||amount<=0){alert('Remplissez la description et le montant.');return;}
+  await fbAdd('epargne_famille',{desc,amount,type,date});
+  document.getElementById('ep-desc').value='';document.getElementById('ep-amt').value='';
+}
+async function addEpEnfant(){
+  const enfant=document.getElementById('ep-enfant').value;
+  const amount=parseFloat(document.getElementById('ep-enfant-amt').value);
+  const desc=document.getElementById('ep-enfant-desc').value.trim()||'Dépôt';
+  const type=document.getElementById('ep-enfant-type').value;
+  const date=document.getElementById('ep-enfant-date').value||td();
+  if(isNaN(amount)||amount<=0){alert('Entrez un montant.');return;}
+  await fbAdd('epargne_enfants',{enfant,amount,desc,type,date});
+  document.getElementById('ep-enfant-amt').value='';document.getElementById('ep-enfant-desc').value='';
+}
+function renderEpargne(){
+  const totFam=totalEpFam();
+  const byType={};EP_FAM.forEach(e=>{byType[e.type]=(byType[e.type]||0)+e.amount;});
+  let famSum=`<div style="font-size:22px;font-weight:700;color:var(--teal);margin-bottom:12px;">${fmt(totFam)}</div>`;
+  Object.entries(byType).forEach(([t,a])=>{famSum+=`<div class="sr"><span>${t}</span><span style="color:var(--teal);font-weight:500;">${fmt(a)}</span></div>`;});
+  document.getElementById('ep-famille-summary').innerHTML=famSum||'<div class="empty">Aucune épargne famille</div>';
+  document.getElementById('ep-famille-list').innerHTML=EP_FAM.length?[...EP_FAM].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`<div class="irow"><span class="iname">${e.desc}</span><span class="icat">${e.type}</span><span class="idate">${e.date||''}</span><span class="iamt rev">+${fmt(e.amount)}</span><button class="btn sm del" onclick="delEpFam('${e._id}')">🗑</button></div>`).join(''):'<div class="empty">Aucun dépôt</div>';
+  document.getElementById('ep-enfants-cards').innerHTML=ENFANTS.map((n,i)=>{
+    const tot=totalEpEnf(n);const totAll=ENFANTS.reduce((s,x)=>s+totalEpEnf(x),0);
+    const pct=totAll>0?Math.round(tot/totAll*100):33;
+    return`<div class="child-card"><div class="child-name" style="color:${ENFANT_COLORS[i]};">${n}</div><div class="child-total">${fmt(tot)}</div><div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${EP_ENF.filter(e=>e.enfant===n).length} dépôt(s)</div><div class="pb"><div class="pf" style="width:${pct}%;background:${ENFANT_COLORS[i]};"></div></div><div style="font-size:11px;color:var(--text2);">${pct}% de l'épargne enfants</div></div>`;
+  }).join('');
+  const fil=document.getElementById('ep-enfant-filter').value;
+  const list=fil?EP_ENF.filter(e=>e.enfant===fil):EP_ENF;
+  document.getElementById('ep-enfants-list').innerHTML=list.length?[...list].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`<div class="irow"><span class="iname" style="color:${ENFANT_COLORS[ENFANTS.indexOf(e.enfant)]};">${e.enfant}</span><span class="iname">${e.desc}</span><span class="icat">${e.type}</span><span class="idate">${e.date||''}</span><span class="iamt rev">+${fmt(e.amount)}</span><button class="btn sm del" onclick="delEpEnf('${e._id}')">🗑</button></div>`).join(''):'<div class="empty">Aucun dépôt</div>';
+}
+async function delEpFam(id){if(!confirm('Supprimer ?'))return;await fbDelete('epargne_famille',id);}
+async function delEpEnf(id){if(!confirm('Supprimer ?'))return;await fbDelete('epargne_enfants',id);}
+
+/* ══ OBJECTIFS ══ */
+function renderObjInputs(){
+  const ep=document.getElementById('oe');if(ep&&O.e)ep.value=O.e;
+  const en=document.getElementById('on');if(en&&O.n)en.value=O.n;
+  const eb=document.getElementById('obt');if(eb&&O.bt)eb.value=O.bt;
+}
+function renderObj(){
+  renderObjInputs();
+  const dr=document.getElementById('odr');if(dr)dr.value=totalDep().toFixed(2);
+  const rv=rev(),sl=solde(),ep2=O.e||0;let eh='';
+  if(ep2>0&&rv>0){const p=Math.min(100,Math.round(Math.max(0,sl)/ep2*100));const fc=p>=100?'green':p>=60?'amber':'red';eh=`<div style="margin-top:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Progression : <strong>${fmt(Math.max(0,sl))}</strong> / ${fmt(ep2)}</span><span style="font-weight:600;">${p}%</span></div><div class="pb thick"><div class="pf ${fc}" style="width:${p}%"></div></div>${sl>=ep2?`<div class="good-box">✅ Objectif atteint ! Vous pouvez épargner <strong>${fmt(sl)}</strong>.</div>`:`<div class="warn-box">Il manque <strong>${fmt(ep2-sl)}</strong>.</div>`}</div>`;}
+  document.getElementById('oe-res').innerHTML=eh;
+  const bt=O.bt||0,dep=totalDep();let bh='';
+  if(bt>0){const r=bt-dep,p=Math.min(100,Math.round(dep/bt*100));const fc=p>=100?'red':p>=80?'amber':'green';bh=`<div style="margin-top:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Utilisé : <strong>${fmt(dep)}</strong> / ${fmt(bt)}</span><span style="font-weight:600;color:${p>=100?'var(--red)':p>=80?'var(--amber)':'var(--green)'};">${p}%</span></div><div class="pb thick"><div class="pf ${fc}" style="width:${p}%"></div></div>${r>=0?`<div class="good-box">Reste : <strong>${fmt(r)}</strong></div>`:`<div class="warn-box">Dépassé de <strong>${fmt(Math.abs(r))}</strong>.</div>`}</div>`;}
+  document.getElementById('obt-res').innerHTML=bh;
+  let ch2='';CATS.forEach(cat=>{const a=D.filter(d=>d.cat===cat).reduce((s,d)=>s+d.amount,0);const bc=O.cats[cat]||0,p=bc>0?Math.min(100,Math.round(a/bc*100)):0;const fc=p>=100?'red':p>=80?'amber':'green';ch2+=`<div style="margin-bottom:14px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="flex:1;font-size:13px;font-weight:500;">${cat}</span><span style="font-size:12px;color:var(--text2);">Dépensé : <strong>${fmt(a)}</strong></span><input type="number" placeholder="Plafond $" min="0" step="50" value="${bc||''}" style="width:110px;font-size:12px;padding:5px 8px;" oninput="O.cats['${cat}']=parseFloat(this.value)||0"></div>${bc>0?`<div class="pb"><div class="pf ${fc}" style="width:${p}%"></div></div><div style="font-size:11px;color:var(--text2);">${fmt(a)} / ${fmt(bc)} — ${p}%${p>=100?' ⚠️':''}</div>`:''}</div>`;});
+  document.getElementById('obj-cats').innerHTML=ch2;
+}
+function saveObj(){
+  O.e=parseFloat(document.getElementById('oe').value)||0;
+  O.n=document.getElementById('on').value||'';
+  O.bt=parseFloat(document.getElementById('obt').value)||0;
+  fbSaveSettings();renderObj();renderMetrics();
+}
+
+/* ══ CSV EXPORT ══ */
+function exportCSV(){
+  let c='Type,Description,Montant,Date,Catégorie,Détail\n';
+  D.forEach(d=>c+=`Dépense,"${d.desc}",${d.amount},${d.date||''},"${d.cat}","${d.who}"\n`);
+  F.forEach(f=>c+=`Facture,"${f.desc}",${f.amount},${f.due||''},"${f.cat}","${f.status==='paid'?'Payée':'À payer'}"\n`);
+  REV.forEach(r=>c+=`Revenu,"${r.desc}",${r.amount},,"${r.type}",Mensuel\n`);
+  const b=new Blob(['\ufeff'+c],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='budget_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+/* ══ RESTORE FORM VALUES ══ */
+function restoreFormValues(){
+  if(S.name1){const e=document.getElementById('sn1');if(e)e.value=S.name1;}
+  if(S.name2){const e=document.getElementById('sn2');if(e)e.value=S.name2;}
+  if(S.s1bw){const e=document.getElementById('s1bw');if(e)e.value=S.s1bw;}
+  if(S.s2bw){const e=document.getElementById('s2bw');if(e)e.value=S.s2bw;}
+  updateNames();
+}
+
+/* ══ RENDER ALL ══ */
+function renderAll(){
+  renderMetrics();renderDash();renderDep();renderFac();
+  renderRevList();renderRevSummary();renderDettes();
+  renderBudgetCalc();
+  const activeEp=document.getElementById('tab-epargne');
+  if(activeEp&&activeEp.classList.contains('active'))renderEpargne();
+}
+
+/* ══ INIT DATE INPUTS ══ */
+const today=new Date().toISOString().split('T')[0];
+['dep-date','fac-due','ep-date','ep-enfant-date'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=today;});
+document.getElementById('ff-all').style.fontWeight='600';
+</script>
+</body>
+</html>
